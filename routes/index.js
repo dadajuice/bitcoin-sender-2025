@@ -1,7 +1,43 @@
 let express = require('express');
 let router = express.Router();
 
-const publicAddress = "mj4CNS8gScsNDhZDqFCGJfghEMHRpvfg9t";
+const bitcore = require("bitcore-lib");
+const Mnemonic = require("bitcore-mnemonic");
+const axios = require("axios");
+
+const apiNetwork = "https://api.blockcypher.com/v1/btc/test3"
+const publicAddress = "";
+const blockCypherToken = "59b884b56bd04fb798b7b3fff8cce4e6";
+const privateKey = "";
+
+router.get("/wallet", function (req, res) {
+    const mnemonic = new Mnemonic();
+    console.log(`🌱 SEED PHASE: ${mnemonic.toString()}`);
+
+    const seed = mnemonic.toSeed();
+    const hdRoot = bitcore.HDPrivateKey.fromSeed(
+        seed, bitcore.Networks.testnet);
+
+    // BIP32 (derive path) + BIP84
+    const path = "m/84'/1'/0'/0/0";
+    const child = hdRoot.deriveChild(path);
+
+    // Private key + WIF
+    const pk = child.privateKey;
+    const wif = pk.toWIF();
+    console.log(`🔐 PRIVATE KEY (WIF): ${wif}`);
+
+    // Public key
+    const pubKey = pk.toPublicKey();
+    const sigwitAddress = bitcore.Address.fromPublicKey(
+        pubKey,
+        bitcore.Networks.testnet,
+        'witnesspubkeyhash' // P2WPKH
+    );
+    console.log(`🔑 PUBLIC ADDRESS (SIGWIT): ${sigwitAddress}`);
+
+    res.send("SUCCESS! Check the node console for details.");
+});
 
 router.get('/', function(req, res) {
     res.render('index', {
